@@ -38,7 +38,7 @@ public class mainrun {
 
 		String root = "/mnt/tyabe/"; File root_f = new File(root); root_f.mkdir();
 		String home = root+"infodemic_0329/"; File home_f = new File(home); home_f.mkdir();
-
+  
 		// parameters 
 		String startdate = "20200101";
 		String enddate   = "20200615";
