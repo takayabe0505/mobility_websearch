@@ -1,9 +1,10 @@
 package websearch_covidinfodemic_0329;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -34,7 +35,7 @@ public class mainrun {
 	public static void main(String[] args) throws ParseException, IOException {
 
 		//		String searchpath = "/mnt/home1/q_emotion/q_sum/";
-		String gpspath    = "/mnt/log/covid/loc/";
+		//		String gpspath    = "/mnt/log/covid/loc/";
 
 		String root = "/mnt/tyabe/"; File root_f = new File(root); root_f.mkdir();
 		String home = root+"infodemic_0329/"; File home_f = new File(home); home_f.mkdir();
@@ -82,23 +83,23 @@ public class mainrun {
 
 		// meshcode level 5 (250m), every 30 minute interval 
 		//		Integer meshsize = 5;
-		ArrayList<Integer> meshsizes = new ArrayList<Integer>();
+		//		ArrayList<Integer> meshsizes = new ArrayList<Integer>();
 		//		meshsizes.add(3); 
 		//		meshsizes.add(4); 
 		//		meshsizes.add(5); 
 		//		meshsizes.add(6);
 
-		for(Integer meshsize : meshsizes) {
-			// # 2.4 get dynamic population distribution -------------------------------
-			File dynamicpop = new File(home+"dynamic_meshpop_"+String.valueOf(meshsize)+".csv");
-			mesh_dynamicpop.runMeshPop(startdate, enddate, gpspath, dynamicpop, meshsize, IDs);
-
-			// # 2.5 get SCI for each ID -----------------------------------------------
-			File userSCIfile = new File(home+"user_SCI_"+String.valueOf(meshsize)+".csv");
-			user_SCI.runSCImetric(dynamicpop, startdate, enddate, gpspath, meshsize, IDs, userSCIfile);
-
-			System.out.println("finished for mesh size "+String.valueOf(meshsize));
-		}
+		//		for(Integer meshsize : meshsizes) {
+		//			// # 2.4 get dynamic population distribution -------------------------------
+		//			File dynamicpop = new File(home+"dynamic_meshpop_"+String.valueOf(meshsize)+".csv");
+		//			mesh_dynamicpop.runMeshPop(startdate, enddate, gpspath, dynamicpop, meshsize, IDs);
+		//
+		//			// # 2.5 get SCI for each ID -----------------------------------------------
+		//			File userSCIfile = new File(home+"user_SCI_"+String.valueOf(meshsize)+".csv");
+		//			user_SCI.runSCImetric(dynamicpop, startdate, enddate, gpspath, meshsize, IDs, userSCIfile);
+		//
+		//			System.out.println("finished for mesh size "+String.valueOf(meshsize));
+		//		}
 
 
 		// 3. fake IDs
@@ -110,15 +111,35 @@ public class mainrun {
 		HashMap<String, Integer> id_misinfoscore = connect_files.ID_misinfoscore(idwordcount, id_misinfoscore_f);
 
 		// 3.2. delta Rg, TTD, SCI for each ID 
-
+		File id_metrics_f = new File(home+"id_metrics.csv");
+		String resdir  = home+"metrics_bydays/";
+		HashMap<String, String> id_metrics = connect_files.getmetrics(startdate, enddate, resdir, id_newid, id_metrics_f);
 
 		// 3.3. home code (population density and income) for each ID 
 		// https://www5.cao.go.jp/keizai-shimon/kaigi/special/future/keizai-jinkou_data.html
-		
+		File idhomemesh_f = new File(home+"id_homelocs_meshcode.csv");
+		HashMap<String, String> id_meshcode = connect_files.intomeshcode(idhome_f, idhomemesh_f);
 
 		// 3.4. combine all data into one table 
-		
-		// test edit
+		File id_allmeasures = new File(home+"id_allmeasures.csv");
+		BufferedWriter bw = new BufferedWriter(new FileWriter(id_allmeasures));
+		for(String id : id_newid.keySet()) {
+			String homemesh = "0";
+			if(id_meshcode.containsKey(id)) {
+				homemesh = id_meshcode.get(id);
+			}
+			String misinfoscore = "0";
+			if(id_misinfoscore.containsKey(id)) {
+				misinfoscore = String.valueOf(id_misinfoscore.get(id));
+			}
+			String metrics = "0";
+			if(id_metrics.containsKey(id)) {
+				metrics = id_metrics.get(id);
+			}
+			bw.write(id_newid.get(id)+","+homemesh+","+misinfoscore+","+metrics);
+			bw.newLine();
+		}
+		bw.close();
 
 	}
 
