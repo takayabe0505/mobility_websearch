@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import jp.ac.ut.csis.pflow.geom.LonLat;
-
 public class mainrun {
 
 	/**
@@ -120,6 +118,7 @@ public class mainrun {
 
 		// 3.4. combine all data into one table 
 		
+		// test edit
 
 	}
 
