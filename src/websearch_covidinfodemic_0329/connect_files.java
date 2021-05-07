@@ -183,6 +183,42 @@ public class connect_files {
 		}
 		return res;
 	}
+	
+	// TODO
+	public static String computedaily(
+			String id, 
+			HashMap<String, HashMap<String, Double>> in
+			) throws ParseException {
+		String res = "0,0";
+		if(in.containsKey(id)) {
+			Double beftmp = 0d;
+			Integer beftmpcount = 0;
+			Double afttmp = 0d;
+			Integer afttmpcount = 0;
+			HashMap<String, Double> thisid = in.get(id);
+			for(String datestr : thisid.keySet()) {
+				Date date = DATE.parse(datestr);
+				if(date.before(DATE.parse("20200201"))) {
+					beftmp+=thisid.get(datestr);
+					beftmpcount+=1;
+				}
+				else {
+					afttmp+=thisid.get(datestr);
+					afttmpcount+=1;	
+				}
+			}
+			Double befres = 0d;
+			Double aftres = 0d;
+			if(beftmpcount>0) {
+				befres = beftmp/(double)beftmpcount;
+			}			
+			if(afttmpcount>0) {
+				aftres = afttmp/(double)afttmpcount;
+			}
+			res = String.valueOf(befres)+","+String.valueOf(aftres);
+		}
+		return res;
+	}
 
 
 	public static void metricintomap(
