@@ -43,6 +43,8 @@ public class mainrun {
 		// parameters 
 		String startdate = "20200101";
 		String enddate   = "20200615";
+		
+		System.out.println("========= COLLECT DATA =========");
 
 		// # 1 get search counts ----------------------------------------------
 		File idwordcount = new File(home+"id_searchcounts.tsv");
