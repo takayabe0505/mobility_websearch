@@ -110,17 +110,13 @@ public class connect_files {
 
 
 	public static HashMap<String, String> getmetrics(
+			String metric, // choose "rg","ttd","disp","sahr"
 			String startdate, 
 			String enddate,
-			String resdir,
-			HashMap<String,String> id_newid,
-			File out
+			String resdir
 			) throws ParseException, IOException {
 
-		HashMap<String, HashMap<String, Double>> id_date_rg   = new HashMap<String, HashMap<String, Double>>();
-		HashMap<String, HashMap<String, Double>> id_date_ttd  = new HashMap<String, HashMap<String, Double>>();
-		HashMap<String, HashMap<String, Double>> id_date_disp = new HashMap<String, HashMap<String, Double>>();
-		HashMap<String, HashMap<String, Double>> id_date_sahr = new HashMap<String, HashMap<String, Double>>();
+		HashMap<String, HashMap<String, Double>> id_date_value   = new HashMap<String, HashMap<String, Double>>();
 
 		Date start_date_date = DATE.parse(startdate);
 		Date end_date_date   = DATE.parse(enddate);
@@ -129,26 +125,20 @@ public class connect_files {
 			String date_str = DATE.format(date);
 			Date next_date = utils.nextday_date(date);
 			File id_metrics = new File(resdir+date_str+"_metrics.csv");
-			metricintomap(id_metrics, date_str, id_date_rg,id_date_ttd,id_date_disp,id_date_sahr);
+			metricintomap(id_metrics, date_str, id_date_value, metric);
 			System.out.println("--- DONE metrics for "+date_str);
 			date = next_date;
 		}
-		
+
 		HashMap<String, String> id_metricline = new HashMap<String, String>();
-		BufferedWriter bw = new BufferedWriter(new FileWriter(out));
-		for(String id : id_newid.keySet()) {
-			String rg   = computebefaft(id, id_date_rg);
-			String ttd  = computebefaft(id, id_date_ttd);
-			String disp = computebefaft(id, id_date_disp);
-			String sahr = computebefaft(id, id_date_sahr);
-			String res = rg+","+ttd+","+disp+","+sahr;
-			id_metricline.put(id, res);
+		for(String id : id_date_value.keySet()) {
+			String rg   = computedaily(id, id_date_value, startdate, enddate);
+			id_metricline.put(id, rg);
 		}
-		bw.close();
-		
+
 		return id_metricline;
 	}
-	
+
 	public static String computebefaft(
 			String id, 
 			HashMap<String, HashMap<String, Double>> in
@@ -183,40 +173,26 @@ public class connect_files {
 		}
 		return res;
 	}
-	
+
 	// TODO
 	public static String computedaily(
 			String id, 
-			HashMap<String, HashMap<String, Double>> in
+			HashMap<String, HashMap<String, Double>> in,
+			String startdate,
+			String enddate
 			) throws ParseException {
-		String res = "0,0";
-		if(in.containsKey(id)) {
-			Double beftmp = 0d;
-			Integer beftmpcount = 0;
-			Double afttmp = 0d;
-			Integer afttmpcount = 0;
-			HashMap<String, Double> thisid = in.get(id);
-			for(String datestr : thisid.keySet()) {
-				Date date = DATE.parse(datestr);
-				if(date.before(DATE.parse("20200201"))) {
-					beftmp+=thisid.get(datestr);
-					beftmpcount+=1;
-				}
-				else {
-					afttmp+=thisid.get(datestr);
-					afttmpcount+=1;	
-				}
-			}
-			Double befres = 0d;
-			Double aftres = 0d;
-			if(beftmpcount>0) {
-				befres = beftmp/(double)beftmpcount;
-			}			
-			if(afttmpcount>0) {
-				aftres = afttmp/(double)afttmpcount;
-			}
-			res = String.valueOf(befres)+","+String.valueOf(aftres);
+		HashMap<String, Double> thisid = in.get(id);
+		String res = "";
+		Date start_date_date = DATE.parse(startdate);
+		Date end_date_date   = DATE.parse(enddate);
+		Date date = start_date_date;
+		while((date.before(end_date_date))||(date.equals(end_date_date))){
+			String date_str = DATE.format(date);
+			res = res+","+thisid.get(date_str);
+			Date next_date = utils.nextday_date(date);
+			date = next_date;
 		}
+		res = res.substring(1);
 		return res;
 	}
 
@@ -224,55 +200,32 @@ public class connect_files {
 	public static void metricintomap(
 			File in,
 			String date_str, 
-			HashMap<String, HashMap<String, Double>> id_date_rg,
-			HashMap<String, HashMap<String, Double>> id_date_ttd,
-			HashMap<String, HashMap<String, Double>> id_date_disp,
-			HashMap<String, HashMap<String, Double>> id_date_sahr
+			HashMap<String, HashMap<String, Double>> id_date_value,
+			String val
 			) throws IOException {
+		Integer ind = 3; // when "rg"
+		if(val.equals("ttd")) {
+			ind = 4;
+		}
+		else if(val.equals("disp")) {
+			ind = 5;
+		}
+		else if(val.equals("sahr")) {
+			ind = 6; 
+		}
 		BufferedReader br = new BufferedReader(new FileReader(in));
 		String line = null;
 		while((line=br.readLine())!=null) {
 			String[] tokens = line.split(",");
 			String id = tokens[0];
-			Double rg   = Double.parseDouble(tokens[3]);
-			Double ttd  = Double.parseDouble(tokens[4]);
-			Double disp = Double.parseDouble(tokens[5]);
-			Double sahr = Double.parseDouble(tokens[6]);
-
-			if(id_date_rg.containsKey(id)) {
-				id_date_rg.get(id).put(date_str, rg);
+			Double value = Double.parseDouble(tokens[ind]);
+			if(id_date_value.containsKey(id)) {
+				id_date_value.get(id).put(date_str, value);
 			}
 			else {
 				HashMap<String, Double> tmp = new HashMap<String, Double>();
-				tmp.put(date_str, rg);
-				id_date_rg.put(id, tmp);
-			}
-
-			if(id_date_ttd.containsKey(id)) {
-				id_date_ttd.get(id).put(date_str, ttd);
-			}
-			else {
-				HashMap<String, Double> tmp = new HashMap<String, Double>();
-				tmp.put(date_str, ttd);
-				id_date_ttd.put(id, tmp);
-			}
-
-			if(id_date_disp.containsKey(id)) {
-				id_date_disp.get(id).put(date_str, disp);
-			}
-			else {
-				HashMap<String, Double> tmp = new HashMap<String, Double>();
-				tmp.put(date_str, disp);
-				id_date_disp.put(id, tmp);
-			}
-
-			if(id_date_sahr.containsKey(id)) {
-				id_date_sahr.get(id).put(date_str, sahr);
-			}
-			else {
-				HashMap<String, Double> tmp = new HashMap<String, Double>();
-				tmp.put(date_str, sahr);
-				id_date_sahr.put(id, tmp);
+				tmp.put(date_str, value);
+				id_date_value.put(id, tmp);
 			}
 		}
 		br.close();

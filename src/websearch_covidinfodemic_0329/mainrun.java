@@ -39,11 +39,11 @@ public class mainrun {
 
 		String root = "/mnt/tyabe/"; File root_f = new File(root); root_f.mkdir();
 		String home = root+"infodemic_0329/"; File home_f = new File(home); home_f.mkdir();
-  
+
 		// parameters 
 		String startdate = "20200101";
 		String enddate   = "20200615";
-		
+
 		System.out.println("========= COLLECT DATA =========");
 
 		// # 1 get search counts ----------------------------------------------
@@ -112,20 +112,48 @@ public class mainrun {
 		File id_misinfoscore_f = new File(home+"id_misinfoscore.csv");
 		HashMap<String, Integer> id_misinfoscore = connect_files.ID_misinfoscore(idwordcount, id_misinfoscore_f);
 
-		// 3.2. delta Rg, TTD, SCI for each ID 
-		File id_metrics_f = new File(home+"id_metrics.csv");
-		String resdir  = home+"metrics_bydays/";
-		HashMap<String, String> id_metrics = connect_files.getmetrics(startdate, enddate, resdir, id_newid, id_metrics_f);
-
 		// 3.3. home code (population density and income) for each ID 
 		// https://www5.cao.go.jp/keizai-shimon/kaigi/special/future/keizai-jinkou_data.html
 		File idhomemesh_f = new File(home+"id_homelocs_meshcode.csv");
 		HashMap<String, String> id_meshcode = connect_files.intomeshcode(idhome_f, idhomemesh_f);
 
+		// 3.2. delta Rg, TTD, SCI for each ID 
+		String resdir  = home+"metrics_bydays/";
+		HashMap<String, String> id_rg = connect_files.getmetrics("rg",startdate, enddate, resdir);
+		HashMap<String, String> id_ttd= connect_files.getmetrics("ttd",startdate, enddate, resdir);
+		HashMap<String, String> id_disp= connect_files.getmetrics("disp",startdate, enddate, resdir);
+		HashMap<String, String> id_sahr = connect_files.getmetrics("sahr",startdate, enddate, resdir);
+
 		// 3.4. combine all data into one table 
-		File id_allmeasures = new File(home+"id_allmeasures.csv");
-		BufferedWriter bw = new BufferedWriter(new FileWriter(id_allmeasures));
-		for(String id : id_newid.keySet()) {
+		File id_rg_f = new File(home+"id_rg.csv");
+		File id_ttd_f = new File(home+"id_ttd.csv");
+		File id_disp_f = new File(home+"id_disp.csv");
+		File id_sahr_f = new File(home+"id_sahr.csv");
+
+		writeoutres(id_rg_f,id_newid,id_misinfoscore,id_meshcode,id_rg);
+		writeoutres(id_ttd_f,id_newid,id_misinfoscore,id_meshcode,id_ttd);
+		writeoutres(id_disp_f,id_newid,id_misinfoscore,id_meshcode,id_disp);
+		writeoutres(id_sahr_f,id_newid,id_misinfoscore,id_meshcode,id_sahr);
+		
+		Integer negsamples = Integer.valueOf(args[0]);
+		
+		selectdata.select_subset(id_rg_f, negsamples);
+		selectdata.select_subset(id_ttd_f, negsamples);
+		selectdata.select_subset(id_disp_f, negsamples);
+		selectdata.select_subset(id_sahr_f, negsamples);
+		
+	}
+
+
+	public static void writeoutres(
+			File out, 
+			HashMap<String, String> id_newid, 
+			HashMap<String, Integer> id_misinfoscore,
+			HashMap<String, String> id_meshcode,
+			HashMap<String, String> id_metric
+			) throws IOException {
+		BufferedWriter bw = new BufferedWriter(new FileWriter(out));
+		for(String id : id_metric.keySet()) {
 			String homemesh = "0";
 			if(id_meshcode.containsKey(id)) {
 				homemesh = id_meshcode.get(id);
@@ -135,15 +163,15 @@ public class mainrun {
 				misinfoscore = String.valueOf(id_misinfoscore.get(id));
 			}
 			String metrics = "0";
-			if(id_metrics.containsKey(id)) {
-				metrics = id_metrics.get(id);
+			if(id_metric.containsKey(id)) {
+				metrics = id_metric.get(id);
 			}
 			bw.write(id_newid.get(id)+","+homemesh+","+misinfoscore+","+metrics);
 			bw.newLine();
 		}
 		bw.close();
-
 	}
+
 
 
 }
