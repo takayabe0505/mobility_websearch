@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -118,30 +119,19 @@ public class mainrun {
 		HashMap<String, String> id_meshcode = connect_files.intomeshcode(idhome_f, idhomemesh_f);
 
 		// 3.2. delta Rg, TTD, SCI for each ID 
-		String resdir  = home+"metrics_bydays/";
-		HashMap<String, String> id_rg = connect_files.getmetrics("rg",startdate, enddate, resdir);
-		HashMap<String, String> id_ttd= connect_files.getmetrics("ttd",startdate, enddate, resdir);
-		HashMap<String, String> id_disp= connect_files.getmetrics("disp",startdate, enddate, resdir);
-		HashMap<String, String> id_sahr = connect_files.getmetrics("sahr",startdate, enddate, resdir);
-
-		// 3.4. combine all data into one table 
-		File id_rg_f = new File(home+"id_rg.csv");
-		File id_ttd_f = new File(home+"id_ttd.csv");
-		File id_disp_f = new File(home+"id_disp.csv");
-		File id_sahr_f = new File(home+"id_sahr.csv");
-
-		writeoutres(id_rg_f,id_newid,id_misinfoscore,id_meshcode,id_rg);
-		writeoutres(id_ttd_f,id_newid,id_misinfoscore,id_meshcode,id_ttd);
-		writeoutres(id_disp_f,id_newid,id_misinfoscore,id_meshcode,id_disp);
-		writeoutres(id_sahr_f,id_newid,id_misinfoscore,id_meshcode,id_sahr);
+		String resdir  = home+"metrics_bydays/";		
 		
 		Integer negsamples = Integer.valueOf(args[0]);
-		
-		selectdata.select_subset(id_rg_f, negsamples);
-		selectdata.select_subset(id_ttd_f, negsamples);
-		selectdata.select_subset(id_disp_f, negsamples);
-		selectdata.select_subset(id_sahr_f, negsamples);
-		
+
+		// 3.4. combine all data into one table 
+		ArrayList<String> list = new ArrayList<String>();
+		list.add("rg"); list.add("ttd"); list.add("disp"); list.add("sahr");
+		for(String met : list) {
+			HashMap<String, String> id_rg = connect_files.getmetrics(met,startdate, enddate, resdir);
+			File id_rg_f = new File(home+"id_"+met+".csv");
+			writeoutres(id_rg_f,id_newid,id_misinfoscore,id_meshcode,id_rg);
+			selectdata.select_subset(id_rg_f, negsamples);
+		}
 	}
 
 
