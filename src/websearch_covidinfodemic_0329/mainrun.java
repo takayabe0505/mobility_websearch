@@ -128,7 +128,7 @@ public class mainrun {
 		list.add("rg"); list.add("ttd"); list.add("disp"); list.add("sahr");
 		for(String met : list) {
 			HashMap<String, String> id_rg = connect_files.getmetrics(met,startdate, enddate, resdir);
-			File id_rg_f = new File(home+"id_"+met+".csv");
+			File id_rg_f = new File(home+"id_"+met+"_v2.csv");
 			writeoutres(id_rg_f,id_newid,id_misinfoscore,id_meshcode,id_rg);
 			selectdata.select_subset(id_rg_f, negsamples);
 		}

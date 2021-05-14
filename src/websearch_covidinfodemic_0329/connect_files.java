@@ -188,7 +188,12 @@ public class connect_files {
 		Date date = start_date_date;
 		while((date.before(end_date_date))||(date.equals(end_date_date))){
 			String date_str = DATE.format(date);
-			res = res+","+thisid.get(date_str);
+			String val = "null";
+			if(thisid.containsKey(date_str)) {
+				Double value = ((double)Math.round(thisid.get(date_str) * 10))/10;
+				val = String.valueOf(value);
+			}
+			res = res+","+val;
 			Date next_date = utils.nextday_date(date);
 			date = next_date;
 		}
