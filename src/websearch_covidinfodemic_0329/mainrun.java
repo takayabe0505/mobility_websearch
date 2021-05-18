@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import jp.ac.ut.csis.pflow.geom.LonLat;
+
 public class mainrun {
 
 	/**
@@ -35,15 +37,16 @@ public class mainrun {
 
 	public static void main(String[] args) throws ParseException, IOException {
 
-		//		String searchpath = "/mnt/home1/q_emotion/q_sum/";
-		//		String gpspath    = "/mnt/log/covid/loc/";
+		//		String searchpath = "/mnt/home1/q_emotion/q_sum/"; // old one 
+		//		String searchpath = "/mnt/log/covid/query/";
+		String gpspath    = "/mnt/log/covid/loc/";
 
 		String root = "/mnt/tyabe/"; File root_f = new File(root); root_f.mkdir();
 		String home = root+"infodemic_0329/"; File home_f = new File(home); home_f.mkdir();
 
 		// parameters 
-		String startdate = "20200101";
-		String enddate   = "20200615";
+		String startdate = "20200616";
+		String enddate   = "20210315";
 
 		System.out.println("========= COLLECT DATA =========");
 
@@ -77,32 +80,32 @@ public class mainrun {
 		System.out.println("--- got home locations ---");
 
 		// # 2.3 obtain individual mobility metrics --------------------------------
-		//		HashMap<String, LonLat> idhome = user_mobilitymetric.getidhome(idhome_f);
+		HashMap<String, LonLat> idhome = user_mobilitymetric.getidhome(idhome_f);
 		//		System.out.println("--- got id home "+String.valueOf(idhome.size()));
-		//		String resdir  = home+"metrics_bydays/"; File resdir_f = new File(resdir); resdir_f.mkdir();
-		//		user_mobilitymetric.runmetrics("20200508", enddate, gpspath, resdir, idhome);
+		String resdir  = home+"metrics_bydays/"; File resdir_f = new File(resdir); resdir_f.mkdir();
+		user_mobilitymetric.runmetrics(startdate, enddate, gpspath, resdir, idhome);
 		System.out.println("--- got mobility metrics!");
 
 
-		// meshcode level 5 (250m), every 30 minute interval 
-		//		Integer meshsize = 5;
-		//		ArrayList<Integer> meshsizes = new ArrayList<Integer>();
-		//		meshsizes.add(3); 
-		//		meshsizes.add(4); 
-		//		meshsizes.add(5); 
-		//		meshsizes.add(6);
-
-		//		for(Integer meshsize : meshsizes) {
-		//			// # 2.4 get dynamic population distribution -------------------------------
-		//			File dynamicpop = new File(home+"dynamic_meshpop_"+String.valueOf(meshsize)+".csv");
-		//			mesh_dynamicpop.runMeshPop(startdate, enddate, gpspath, dynamicpop, meshsize, IDs);
-		//
-		//			// # 2.5 get SCI for each ID -----------------------------------------------
-		//			File userSCIfile = new File(home+"user_SCI_"+String.valueOf(meshsize)+".csv");
-		//			user_SCI.runSCImetric(dynamicpop, startdate, enddate, gpspath, meshsize, IDs, userSCIfile);
-		//
-		//			System.out.println("finished for mesh size "+String.valueOf(meshsize));
-		//		}
+//		// meshcode level 5 (250m), every 30 minute interval 
+//		//		Integer meshsize = 5;
+//		ArrayList<Integer> meshsizes = new ArrayList<Integer>();
+//		meshsizes.add(3); 
+//		//		meshsizes.add(4); 
+//		//		meshsizes.add(5); 
+//		//		meshsizes.add(6);
+//
+//		for(Integer meshsize : meshsizes) {
+//			// # 2.4 get dynamic population distribution -------------------------------
+//			File dynamicpop = new File(home+"dynamic_meshpop_"+String.valueOf(meshsize)+".csv");
+//			mesh_dynamicpop.runMeshPop(startdate, enddate, gpspath, dynamicpop, meshsize, IDs);
+//
+//			// # 2.5 get SCI for each ID -----------------------------------------------
+//			File userSCIfile = new File(home+"user_SCI_"+String.valueOf(meshsize)+".csv");
+//			user_SCI.runSCImetric(dynamicpop, startdate, enddate, gpspath, meshsize, IDs, userSCIfile);
+//
+//			System.out.println("finished for mesh size "+String.valueOf(meshsize));
+//		}
 
 
 		// 3. fake IDs
@@ -119,16 +122,15 @@ public class mainrun {
 		HashMap<String, String> id_meshcode = connect_files.intomeshcode(idhome_f, idhomemesh_f);
 
 		// 3.2. delta Rg, TTD, SCI for each ID 
-		String resdir  = home+"metrics_bydays/";		
-		
+
 		Integer negsamples = Integer.valueOf(args[0]);
 
 		// 3.4. combine all data into one table 
 		ArrayList<String> list = new ArrayList<String>();
 		list.add("rg"); list.add("ttd"); list.add("disp"); list.add("sahr");
 		for(String met : list) {
-			HashMap<String, String> id_rg = connect_files.getmetrics(met,startdate, enddate, resdir);
-			File id_rg_f = new File(home+"id_"+met+"_v2.csv");
+			HashMap<String, String> id_rg = connect_files.getmetrics(met, "20200101", enddate, resdir);
+			File id_rg_f = new File(home+"id_"+met+"_v3.csv");
 			writeoutres(id_rg_f,id_newid,id_misinfoscore,id_meshcode,id_rg);
 			selectdata.select_subset(id_rg_f, negsamples);
 		}
